@@ -1,0 +1,92 @@
+#!/usr/bin/python
+
+#
+# Author: Ian Gable
+#
+# This script watches a TeX file for changes and then runs the
+# latex compiler rubber is the file has changed. It then pop open
+# the mac pdf viewer Preview.
+#
+#
+
+
+#import pickle
+import time
+import hashlib
+import subprocess
+import sys
+import os
+from optparse import OptionParser
+
+
+def main():
+	try:
+		l = []
+		db = dict(l)
+		
+
+		parser = OptionParser(usage="%prog -t TEXFILE -p PDFFILE",version = "%prog 0.1")
+
+		parser.add_option("-t", "--tex-file", dest="texfile",
+											help="the TeX file to watch", metavar="TEXFILE")
+		parser.add_option("-p","--pdf-file",dest="pdffile",
+											help="the PDF file to display", metavar="PDFFILE")
+		(options, args) = parser.parse_args()
+
+		if not options.texfile:
+			parser.print_help()
+			parser.error("You must spcify a TeX file with -t or --tex-file")
+		if not options.pdffile:
+			parser.print_help()
+			parser.error("You must specify a PDF file with -p or --pdf-file")
+		if not os.path.exists(options.texfile):
+			parser.print_help()
+			parse.error("The file: " + options.texfile + "does not exist.")
+			
+		
+		# run rubber and wait for the results
+		subprocess.Popen([r"rubber", "--pdf", options.texfile]).wait()
+		# open the first time with the filename
+		subprocess.Popen([r"open","-a","Preview", options.pdffile])
+
+		# We have to check this after we try running rubber for the first time
+		# in case someone has cleaned their PDF file.
+		if not os.path.exists(options.pdffile):
+			parser.print_help()
+			parse.error("The file: " + options.pdffile + "does not exist.")
+
+		# set the access times to be the same since we don't have to go through 
+		# the loop before imdiately since we have just run rubber above.
+		last_access_time = 0
+		latest_access_time = 0
+		path = options.texfile
+
+		while True:
+			latest_access_time = os.path.getatime(path);
+			
+			#if the file has been recently accessed 
+			if latest_access_time > last_access_time:
+
+				checksum = hashlib.md5(open(path).read()).hexdigest()
+				# now check if the hash has changed. Maybe the file was touched or
+				# restored from backup but not actually different.
+				if db.get(path, None) != checksum:
+					print checksum
+					print "file changed running rubber"
+					subprocess.Popen([r"rubber", "--pdf", options.texfile]).wait()
+
+					# do the preview without the filename. This way preview opens
+					# to the right page.
+					subprocess.Popen([r"open","-a","Preview"])
+					db[path] = checksum
+				last_access_time = latest_access_time
+			time.sleep(2)
+	#catch the control-c keyboard interupt.
+ 	except (KeyboardInterrupt):
+		print options.texfile + " no longer watched"
+		sys.exit()
+	except (SystemExit):
+		sys.exit()
+	
+main()
+#pickle.dump(db.items(), open("db", "w"))
