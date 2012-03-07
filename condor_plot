@@ -10,8 +10,20 @@ use Time::Local;
 #
 #
 
+$year = "2010";
+$month = "6";
+$day = "1";
+$hour = "0";
+$minute = "0";
+
+#$condor_start = `condor_history | head -n2 | tail -n1 | awk '{print \$7 " " \$8}'`;
+#if ($condor_start =~ m#(\d+)/(\d+) (\d+):(\d+)#) {
+	#$month = $1 -1;
+	#$day = $2 -1;
+#}
+
 # set this variable to be the start time of the graph
-$completedsince =  timelocal(0,0,0,1,5,2010);
+$completedsince =  timelocal(0,$minute,$hour,$day,$month,$year);
 
 # creates a rrd database that does no averaging. Every data point is shown.
 system "rrdtool create test.rrd  --start=$completedsince --step=86400 DS:jobs:GAUGE:86400:0:10000 RRA:AVERAGE:0.5:1:5000";
@@ -65,6 +77,6 @@ $now = time();
 # actually make the RRD plot.
 system "rrdtool graph jobs.png --title 'Completed Cloud Jobs Per Day'"
       ." --vertical-label 'Jobs' --font AXIS:12 --font TITLE:16 --font UNIT:12"
-      ." --width 1000 --height 600  --start=$completedsince --end=$now"
+      ." --width 800 --height 600  --start=$completedsince --end=$now"
       ."  DEF:myjobs=test.rrd:jobs:AVERAGE AREA:myjobs#000AF3";
 

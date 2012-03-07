@@ -26,6 +26,12 @@ Call it from .git/hooks/post-commit. You can see the built in help with
 
     $webdeploy.py --help
 
+## condor_plot
+
+A perl script that makes a histogram of the number of completed Condor jobs
+with a day wide bin. Everything is hardcoded into the script. You have to read
+the source to figure out how to use it.
+
 ## License
 
 This program is free software; you can redistribute it and/or modify
