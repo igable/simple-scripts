@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+use Date::Format;
+use Date::Parse;
+use Time::Local;
+
+# Messy script for plotting variables from condor history using RRDTool
+# Note that you have to read the inline comments to make any sense of it
+#
+# author: Ian Gable <igable@uvic.ca>
+#
+#
+
+# set this variable to be the start time of the graph
+$completedsince =  timelocal(0,0,0,1,5,2010);
+
+# creates a rrd database that does no averaging. Every data point is shown.
+system "rrdtool create test.rrd  --start=$completedsince --step=86400 DS:jobs:GAUGE:86400:0:10000 RRA:AVERAGE:0.5:1:5000";
+
+# Pull the thing you want to plot out of the condor_history.
+# To see a list of available things look at: condor_history -l | head -n 100
+system 'condor_history -format "%i\n" CompletionDate > temp';
+
+
+open TEMP, "<temp" or die "can't read temp file";
+%histogram = ();
+while($line = <TEMP>){
+	# ($date, $jobid) = split(" " ,$line,2);
+	$date =$line;
+	if($date != "0" && $date > $completedsince){
+
+		#pddrint "$line\n";
+		# print "Date:$date JobID:$job\n";
+ 		#print "Date:".localtime($date)." JobID:$job\n";
+ 		#($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($date);
+ 		#$year = $year+1900;
+ 		#$mon = $mon+1;
+ 		#$datestring = $year."-".$mon."-".$mday;
+		#$datestring =  time2str("%Y-%m-%d",$date);
+
+		$datestring =  time2str("%Y-%m-%d",$date);
+
+		#this line bins the dates into day wide bins.
+ 		$histogram{$datestring} = $histogram{$datestring}+1; 
+
+	}	
+}
+
+open OUTPUT, ">condor.csv";
+
+#go through the hash (i.e. histogram) in a sorted order
+foreach $day ( sort keys %histogram )
+{
+  # write out the bins of the histogram to a CSV file.
+  print OUTPUT "$day, $histogram{$day}\n";
+
+  #update the RRD database
+  system 'rrdtool update test.rrd '.str2time($day).':'.$histogram{$day}; 
+}
+
+$now = time();
+
+#--x-grid DAY:1:WEEK:1:WEEK:1:0:\%b
+
+
+# actually make the RRD plot.
+system "rrdtool graph jobs.png --title 'Completed Cloud Jobs Per Day'"
+      ." --vertical-label 'Jobs' --font AXIS:12 --font TITLE:16 --font UNIT:12"
+      ." --width 1000 --height 600  --start=$completedsince --end=$now"
+      ."  DEF:myjobs=test.rrd:jobs:AVERAGE AREA:myjobs#000AF3";
+
