@@ -48,13 +48,10 @@ for bufsize in buffers:
     
     while True:
         buf=fin.read(bufsize)
-        # In this tight loop I don't think you want logging
-        #logging.debug("Read %d bytes from %s" % ( len(buf),src))
+        
         if len(buf)==0:
             break
         fout.write(buf)
-        #md5.update(buf)
-        #totalBytes+=len(buf)
     fout.close()
     fin.close()
     
