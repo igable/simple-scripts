@@ -32,6 +32,13 @@ A perl script that makes a histogram of the number of completed Condor jobs
 with a day wide bin. Everything is hardcoded into the script. You have to read
 the source to figure out how to use it.
 
+## benchmark-buf.py
+
+Reads and wirtes a file with  with python IO with different buffer sizes. It
+outputs the time required for the various buffer sizes
+
+    $ benchmark-buf.py --help
+
 ## License
 
 This program is free software; you can redistribute it and/or modify
