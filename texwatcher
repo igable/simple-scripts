@@ -45,7 +45,7 @@ def main():
             
         
         # run rubber and wait for the results
-        subprocess.Popen([r"rubber", "--pdf", options.texfile]).wait()
+        subprocess.Popen([r"rubber", "--pdf","--force", options.texfile]).wait()
         # open the first time with the filename
         subprocess.Popen([r"open","-a","Preview", options.pdffile])
 
@@ -73,7 +73,7 @@ def main():
                 if db.get(path, None) != checksum:
                     print checksum
                     print "file changed running rubber"
-                    subprocess.Popen([r"rubber", "--pdf", options.texfile]).wait()
+                    subprocess.Popen([r"rubber", "--pdf","--force", options.texfile]).wait()
 
                     # do the preview without the filename. This way preview opens
                     # to the right page.
@@ -82,7 +82,7 @@ def main():
                 last_access_time = latest_access_time
             time.sleep(2)
     #catch the control-c keyboard interupt.
-     except (KeyboardInterrupt):
+    except (KeyboardInterrupt):
         print options.texfile + " no longer watched"
         sys.exit()
     except (SystemExit):
