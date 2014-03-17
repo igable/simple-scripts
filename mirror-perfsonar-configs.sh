@@ -15,4 +15,4 @@ OUTPUTDIR=/var/www/html/psmirror
 PSURL=https://grid-deployment.web.cern.ch/grid-deployment/wlcg-ops/perfsonar/conf/central/
 
 cd ${OUTPUTDIR}
-wget --recursive -e robots=off --no-parent --no-host-directories --reject "index.html*" ${PSURL}
+wget --recursive --quiet -e robots=off --no-parent --no-host-directories --reject "index.html*" ${PSURL}
