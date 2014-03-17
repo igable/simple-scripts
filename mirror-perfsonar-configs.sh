@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 #
 # This script recursively downloads the perfSonar wlcg configuration file
