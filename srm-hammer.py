@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
 #
-# Don't use this highly brittle script for
-# anything.
-#
+# Don't use this brittle script for anything
 #
 
 import subprocess
@@ -16,13 +14,14 @@ from optparse import OptionParser
 
 class SRMFile:
     
-    def __init__(self,filepath):
+    def __init__(self,filepath,destdir):
         self.filepath = filepath.rstrip()
         self.filename = os.path.basename(self.filepath).rstrip()
         self.process = ""
         self.isstarted = False
         self.command = ""
         self.start_time = 0.0
+        self.destdir = destdir
 
     def filename(self):
         return self.filename
@@ -38,10 +37,10 @@ class SRMFile:
 
     def start(self):
         #self.process =subprocess.Popen(["sleep",str(random.randint(1,10))])
-        self.command =  "%s %s %s" % ("lcg-cp", self.filepath, self.filename )
+        self.command =  "%s %s %s" % ("lcg-cp", self.filepath, "%s/%s" % (self.destdir,self.filename) )
         print self.command
         self.start_time = time.time()
-        self.process = subprocess.Popen(["lcg-cp", self.filepath, self.filename ])
+        self.process = subprocess.Popen(["lcg-cp", self.filepath, "%s/%s" % (self.destdir,self.filename) ])
         self.isstarted = True
 
     def kill(self):
@@ -68,17 +67,31 @@ def main():
     try:
         threads = 1
         filelist = ""
-        parser = OptionParser(usage="%prog -f FILELIST -t NUMTHREADS",version = "%prog 0.1")
+        destdir = ""
+        timeout = 60.0
+        parser = OptionParser(usage="%prog -f FILELIST -d DESTDIR -t NUMTHREADS -o TIMEOUT",version = "%prog 0.1")
         parser.add_option("-f", "--file-list", dest="filelist",
         help="list of files to transfer", metavar="FILELIST")
         parser.add_option("-t","--threads",dest="threads",
-        help="the number of transfers to do in parallel", metavar="NUMTHREADS")
+        help="the number of transfers to do in parallel", metavar="NUMTHREADS") 
+        parser.add_option("-d", "--dest-dir", dest="destdir",
+        help="destination directory", metavar="DESTDIR")
+        parser.add_option("-o", "--timeout", dest="timeout",
+        help="transfer timeout", metavar="TIMEOUT")
+
         (options, args) = parser.parse_args()
         if not options.filelist:
             parser.print_help()
             parser.error("You must specify a file list")
         if not options.threads:
             options.threads = 1
+        if not options.destdir:
+            destdir ="."
+        else:
+            destdir = options.destdir
+        if options.timeout:
+            timeout = float(options.timeout)
+
         if not os.path.exists(options.filelist):
             parser.print_help()
             parser.error("The file: " + options.filelist + " does not exist.")
@@ -93,13 +106,12 @@ def main():
     waiting = []
     running = []
     finished = []
-    timeout = 60.0
     print "Running %s threads" % threads
     with open(filelist) as f:
         files = f.readlines()
 
     for file in files:
-        waiting.append(SRMFile(file))
+        waiting.append(SRMFile(file, destdir))
 
     while len(waiting) or len(running):
         for transfer in running:
